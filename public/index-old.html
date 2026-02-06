@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRLM Letter Tracking & Analytics Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navigation Header -->
+        <header class="navbar">
+            <div class="navbar-content">
+                <div class="navbar-brand">
+                    <div class="logo-section">
+                        <h1>🏛️ TRLM</h1>
+                        <div class="brand-text">
+                            <h2>Tripura Rural Livelihood Mission</h2>
+                            <p>Letter Tracking & Analytics Dashboard</p>
+                        </div>
+                    </div>
+                </div>
+                <nav class="navbar-menu">
+                    <a href="/" class="nav-link active">🏠 Dashboard</a>
+                    <a href="/pages/data-table.html" class="nav-link">📊 Data Table</a>
+                    <a href="/pages/analytics.html" class="nav-link">📈 Analytics</a>
+                    <a href="/pages/warnings.html" class="nav-link">⚠️ Warnings</a>
+                    <div id="admin-menu" class="admin-menu" style="display:none;">
+                        <a href="/pages/admin.html" class="nav-link">👤 Admin Panel</a>
+                        <button class="nav-link logout-btn" onclick="logout()">🚪 Logout</button>
+                    </div>
+                    <button id="login-btn" class="nav-link login-btn" onclick="showLoginModal()">🔐 Login</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Alert Banner -->
+            <div id="alert-banner" class="alert-banner" style="display:none;">
+                <span id="alert-text"></span>
+                <a href="/pages/warnings.html" class="alert-link">View All Warnings →</a>
+            </div>
+
+            <!-- Dashboard Statistics Cards -->
+            <section class="stats-section">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon">📧</div>
+                        <div class="stat-content">
+                            <h3>TOTAL LETTERS</h3>
+                            <p id="total-letters" class="stat-value">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3>REPLIED</h3>
+                            <p id="replied-letters" class="stat-value">0</p>
+                            <span id="replied-percent" class="stat-percent"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-content">
+                            <h3>PENDING</h3>
+                            <p id="pending-letters" class="stat-value">0</p>
+                            <span id="pending-percent" class="stat-percent"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-content">
+                            <h3>AVG TIME</h3>
+                            <p id="avg-time" class="stat-value">--</p>
+                            <span class="stat-percent">days</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Warning Summary Section -->
+            <section class="warning-summary">
+                <h2>⚠️ DEADLINE MONITORING - QUICK VIEW</h2>
+                <div class="warning-cards">
+                    <div class="warning-card critical">
+                        <div class="warning-number" id="overdue-count">0</div>
+                        <div class="warning-text">Critical<br><small>(Overdue)</small></div>
+                        <a href="/pages/warnings.html" class="warning-link">View Details →</a>
+                    </div>
+                    <div class="warning-card urgent">
+                        <div class="warning-number" id="due-soon-count">0</div>
+                        <div class="warning-text">Due Soon<br><small>(1-7 days)</small></div>
+                        <a href="/pages/warnings.html" class="warning-link">View Details →</a>
+                    </div>
+                    <div class="warning-card pending">
+                        <div class="warning-number" id="pending-count">0</div>
+                        <div class="warning-text">Pending<br><small>(>7 days)</small></div>
+                        <a href="/pages/warnings.html" class="warning-link">View Details →</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- District Performance Chart Section -->
+            <section class="chart-section">
+                <h2>📊 DISTRICT PERFORMANCE OVERVIEW</h2>
+                <div class="chart-container">
+                    <canvas id="districtChart" style="display:none;"></canvas>
+                    <div id="district-summary" class="district-summary"></div>
+                </div>
+            </section>
+
+            <!-- Recent Letters Section -->
+            <section class="recent-letters">
+                <div class="section-header">
+                    <h2>📬 RECENT LETTERS</h2>
+                    <a href="/pages/data-table.html" class="view-all-btn">View All →</a>
+                </div>
+                <div id="recent-letters-list" class="letters-grid">
+                    <p class="loading">Loading letters...</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2026 Tripura Rural Livelihood Mission | Government of Tripura</p>
+                <p>Contact: info@trlm.tripura.gov.in | Last Updated: <span id="last-updated"></span></p>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a> | 
+                    <a href="#">Terms of Use</a> | 
+                    <a href="#">Help</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" style="display:none;">
+        <div class="modal-content login-modal">
+            <div class="modal-header">
+                <h2>🔐 Admin Login</h2>
+                <button class="close-btn" onclick="closeLoginModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" required placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" required placeholder="Enter your password">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="rememberMe"> Remember Me
+                        </label>
+                    </div>
+                    <div id="loginError" class="error-message"></div>
+                    <button type="submit" class="btn-primary">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/dashboard.js"></script>
+    <script src="/js/chart-config.js"></script>
+</body>
+</html>

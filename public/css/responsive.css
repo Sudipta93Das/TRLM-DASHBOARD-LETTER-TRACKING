@@ -1,0 +1,268 @@
+/* public/css/responsive.css - Responsive Design */
+
+/* Tablet View (768px - 1199px) */
+@media (max-width: 1199px) {
+    .navbar-content {
+        padding: 0 1rem;
+    }
+
+    .navbar-brand {
+        flex-direction: column;
+    }
+
+    .brand-text {
+        display: none;
+    }
+
+    .navbar-menu {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .nav-link {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .warning-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .letters-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+/* Mobile View (<768px) */
+@media (max-width: 767px) {
+    .navbar-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .logo-section h1 {
+        font-size: 1.5rem;
+    }
+
+    .brand-text h2 {
+        font-size: 1rem;
+    }
+
+    .brand-text p {
+        font-size: 0.75rem;
+    }
+
+    .navbar-menu {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nav-link {
+        width: 100%;
+        text-align: center;
+        padding: 0.6rem 0;
+    }
+
+    .main-content {
+        padding: 1rem;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .warning-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .warning-card {
+        padding: 1rem;
+    }
+
+    .warning-number {
+        font-size: 2rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: none;
+    }
+
+    .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .letters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .letter-card-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .table-container {
+        font-size: 0.8rem;
+    }
+
+    th, td {
+        padding: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 0.6rem;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .footer-content {
+        font-size: 0.8rem;
+    }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Small Mobile View (<480px) */
+@media (max-width: 479px) {
+    .logo-section h1 {
+        font-size: 1.2rem;
+    }
+
+    .brand-text h2 {
+        font-size: 0.85rem;
+    }
+
+    .brand-text p {
+        font-size: 0.7rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .warning-number {
+        font-size: 1.8rem;
+    }
+
+    .warning-text {
+        font-size: 0.85rem;
+    }
+
+    .district-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .close-btn {
+        font-size: 1.2rem;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 0.5rem;
+    }
+
+    table {
+        font-size: 0.75rem;
+    }
+
+    th, td {
+        padding: 0.4rem;
+    }
+
+    .main-content {
+        min-height: auto;
+    }
+}
+
+/* Landscape Orientation */
+@media (max-aspect-ratio: 13/9) and (max-height: 500px) {
+    .navbar {
+        padding: 0.5rem 0;
+    }
+
+    .main-content {
+        padding: 1rem;
+        min-height: auto;
+    }
+
+    .stats-container {
+        gap: 0.5rem;
+    }
+
+    .stat-card {
+        padding: 0.75rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar,
+    .footer,
+    .nav-link,
+    .login-btn,
+    .close-btn,
+    #loginModal {
+        display: none;
+    }
+
+    .main-content {
+        padding: 0;
+        min-height: auto;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid #000;
+        padding: 0.5rem;
+    }
+
+    th {
+        background-color: #f0f0f0;
+        color: #000;
+    }
+}
