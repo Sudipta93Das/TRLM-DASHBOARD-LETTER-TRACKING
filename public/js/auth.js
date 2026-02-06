@@ -2,6 +2,47 @@
 
 let currentUser = null;
 
+// Notification function
+function showNotification(message, type = 'info') {
+    const notificationDiv = document.createElement('div');
+    notificationDiv.className = `notification notification-${type}`;
+    notificationDiv.textContent = message;
+    notificationDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 4px;
+        z-index: 2000;
+        min-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease;
+    `;
+    
+    const colors = {
+        success: '#d4edda',
+        error: '#f8d7da',
+        warning: '#fff3cd',
+        info: '#d1ecf1'
+    };
+    
+    const textColors = {
+        success: '#155724',
+        error: '#721c24',
+        warning: '#856404',
+        info: '#0c5460'
+    };
+    
+    notificationDiv.style.backgroundColor = colors[type] || colors.info;
+    notificationDiv.style.color = textColors[type] || textColors.info;
+    
+    document.body.appendChild(notificationDiv);
+    
+    setTimeout(() => {
+        notificationDiv.remove();
+    }, 3000);
+}
+
 async function initAuth() {
     const token = localStorage.getItem('auth_token');
     if (!token) {
@@ -76,14 +117,28 @@ function updateLoginUI(loggedIn) {
 }
 
 function showLoginModal() {
-    document.getElementById('loginModal').style.display = 'flex';
-    document.getElementById('username').focus();
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        const usernameField = document.getElementById('username');
+        if (usernameField) usernameField.focus();
+    }
 }
 
-function closeLoginModal() {
-    document.getElementById('loginModal').style.display = 'none';
-    document.getElementById('loginForm').reset();
-    document.getElementById('loginError').textContent = '';
+function closeLoginModal(event) {
+    // If event is passed and it's clicking outside the modal content, close it
+    if (event && event.target.id !== 'loginModal') return;
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.visibility = 'hidden';
+    }
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.reset();
+    const loginError = document.getElementById('loginError');
+    if (loginError) loginError.textContent = '';
+    if (loginError) loginError.style.display = 'none';
 }
 
 function requireAuth() {

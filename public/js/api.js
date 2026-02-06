@@ -1,6 +1,6 @@
 // public/js/api.js - API Communication
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = '/api';
 
 // Get token from localStorage
 function getToken() {
