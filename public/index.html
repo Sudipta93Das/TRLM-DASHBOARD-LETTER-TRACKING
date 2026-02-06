@@ -132,12 +132,14 @@
                             <tr>
                                 <th>Letter No</th>
                                 <th>Subject</th>
+                                <th>Districts</th>
                                 <th>Status</th>
                                 <th>Deadline</th>
+                                <th>Reply Date</th>
                             </tr>
                         </thead>
                         <tbody id="recent-letters-body">
-                            <tr><td colspan="4" class="loading">Loading...</td></tr>
+                            <tr><td colspan="6" class="loading">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -374,27 +376,100 @@
             padding: 2rem;
             color: #666;
         }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-fast {
+            background-color: #C6EFCE;
+            color: #006100;
+        }
+
+        .status-on-time {
+            background-color: #BDD7EE;
+            color: #002060;
+        }
+
+        .status-late {
+            background-color: #FFC7CE;
+            color: #9C0006;
+        }
+
+        .status-waiting {
+            background-color: #FFEB9C;
+            color: #9C6500;
+        }
+
+        .modal-overlay.show {
+            display: flex !important;
+        }
     </style>
 
     <script>
         const API_URL = '/api';
 
+        // Calculate status based on dates
+        function calculateStatus(despatchDate, deadline, replyDate) {
+            if (!replyDate) return 'Waiting';
+            
+            const despatch = new Date(despatchDate);
+            const reply = new Date(replyDate);
+            const dead = new Date(deadline);
+            
+            const responseTime = Math.ceil((reply - despatch) / (1000 * 60 * 60 * 24));
+            
+            if (responseTime <= 3) return 'Fast';
+            if (reply <= dead) return 'On Time';
+            return 'Late';
+        }
+
+        // Get status color class
+        function getStatusColor(status) {
+            const statusMap = {
+                'Fast': 'status-fast',
+                'On Time': 'status-on-time',
+                'Late': 'status-late',
+                'Waiting': 'status-waiting'
+            };
+            return statusMap[status] || 'status-waiting';
+        }
+
         // Modal functions
         function openLoginModal() {
-            document.getElementById('loginModal').classList.add('show');
-            document.getElementById('username').focus();
+            const modal = document.getElementById('loginModal');
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+            setTimeout(() => {
+                const username = document.getElementById('username');
+                if (username) username.focus();
+            }, 100);
         }
 
         function closeLoginModal() {
-            document.getElementById('loginModal').classList.remove('show');
-            document.getElementById('loginForm').reset();
-            document.getElementById('loginError').style.display = 'none';
+            const modal = document.getElementById('loginModal');
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            const form = document.getElementById('loginForm');
+            if (form) form.reset();
+            const errorDiv = document.getElementById('loginError');
+            if (errorDiv) errorDiv.style.display = 'none';
         }
 
-        // Close modal when clicking outside
-        document.getElementById('loginModal').addEventListener('click', (e) => {
-            if (e.target.id === 'loginModal') {
-                closeLoginModal();
+        // Close modal when clicking on background
+        window.addEventListener('load', () => {
+            const modal = document.getElementById('loginModal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target.id === 'loginModal') {
+                        closeLoginModal();
+                    }
+                });
             }
         });
 
@@ -406,8 +481,15 @@
             const password = document.getElementById('password').value.trim();
             const errorDiv = document.getElementById('loginError');
 
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
             try {
                 errorDiv.style.display = 'none';
+                console.log('Attempting login with:', username);
 
                 const response = await fetch(`${API_URL}/auth/login`, {
                     method: 'POST',
@@ -417,30 +499,34 @@
                     body: JSON.stringify({ username, password })
                 });
 
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
 
                 if (!response.ok) {
-                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.textContent = data.error || 'Login failed: ' + response.statusText;
                     errorDiv.style.display = 'block';
                     return;
                 }
 
-                // Save token
-                localStorage.setItem('auth_token', data.token);
-                localStorage.setItem('username', data.username);
+                if (data.success && data.token) {
+                    localStorage.setItem('auth_token', data.token);
+                    localStorage.setItem('username', data.username);
+                    console.log('Login successful, token saved');
+                    
+                    closeLoginModal();
+                    alert('✅ Login successful! Redirecting to admin panel...');
 
-                // Close modal
-                closeLoginModal();
-
-                // Show success message
-                alert('Login successful! Redirecting to admin panel...');
-
-                // Redirect to admin
-                setTimeout(() => {
-                    window.location.href = '/pages/admin.html';
-                }, 1000);
+                    setTimeout(() => {
+                        window.location.href = '/pages/admin.html';
+                    }, 500);
+                } else {
+                    errorDiv.textContent = 'Invalid response from server';
+                    errorDiv.style.display = 'block';
+                }
 
             } catch (error) {
+                console.error('Login error:', error);
                 errorDiv.textContent = 'Connection error: ' + error.message;
                 errorDiv.style.display = 'block';
             }
@@ -448,7 +534,7 @@
 
         // Logout function
         function handleLogout() {
-            if (confirm('Logout?')) {
+            if (confirm('Are you sure you want to logout?')) {
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('username');
                 location.reload();
@@ -458,59 +544,93 @@
         // Check if logged in and update UI
         function checkLoginStatus() {
             const token = localStorage.getItem('auth_token');
-            if (token) {
-                document.getElementById('login-btn').style.display = 'none';
-                document.getElementById('admin-menu').style.display = 'flex';
+            const loginBtn = document.getElementById('login-btn');
+            const adminMenu = document.getElementById('admin-menu');
+            
+            if (token && loginBtn && adminMenu) {
+                loginBtn.style.display = 'none';
+                adminMenu.style.display = 'flex';
             } else {
-                document.getElementById('login-btn').style.display = 'block';
-                document.getElementById('admin-menu').style.display = 'none';
+                if (loginBtn) loginBtn.style.display = 'block';
+                if (adminMenu) adminMenu.style.display = 'none';
             }
         }
 
         // Load dashboard data
         async function loadDashboard() {
             try {
+                console.log('Loading dashboard data...');
+                
                 const response = await fetch(`${API_URL}/analytics/dashboard`);
                 const data = await response.json();
+                console.log('Dashboard data:', data);
 
                 if (data.statistics) {
                     const { statistics, warnings } = data;
-                    document.getElementById('total-letters').textContent = statistics.total_letters || 0;
-                    document.getElementById('replied-letters').textContent = statistics.replied_letters || 0;
-                    document.getElementById('pending-letters').textContent = statistics.pending_letters || 0;
+                    const totalLetters = statistics.total_letters || 0;
+                    const repliedLetters = statistics.replied_letters || 0;
+                    const pendingLetters = statistics.pending_letters || 0;
+
+                    document.getElementById('total-letters').textContent = totalLetters;
+                    document.getElementById('replied-letters').textContent = repliedLetters;
+                    document.getElementById('pending-letters').textContent = pendingLetters;
+
+                    if (totalLetters > 0) {
+                        const repliedPercent = ((repliedLetters / totalLetters) * 100).toFixed(1);
+                        const pendingPercent = ((pendingLetters / totalLetters) * 100).toFixed(1);
+                        document.getElementById('replied-percent').textContent = `(${repliedPercent}%)`;
+                        document.getElementById('pending-percent').textContent = `(${pendingPercent}%)`;
+                    }
+
                     document.getElementById('overdue-count').textContent = warnings.overdue || 0;
                     document.getElementById('due-soon-count').textContent = warnings.due_soon || 0;
                     document.getElementById('pending-count').textContent = warnings.pending || 0;
                 }
 
                 // Load recent letters
-                const lettersRes = await fetch(`${API_URL}/letters?limit=10`);
+                console.log('Loading recent letters...');
+                const lettersRes = await fetch(`${API_URL}/letters?limit=10&page=1`);
                 const lettersData = await lettersRes.json();
+                console.log('Letters data:', lettersData);
 
                 const tbody = document.getElementById('recent-letters-body');
                 tbody.innerHTML = '';
 
                 if (lettersData.data && lettersData.data.length > 0) {
                     lettersData.data.forEach(letter => {
+                        const status = calculateStatus(
+                            letter.date_of_despatch,
+                            letter.deadline,
+                            letter.date_of_reply
+                        );
+                        const statusClass = getStatusColor(status || 'Waiting');
+                        const districts = letter.districts ? letter.districts.split(',').join(', ') : 'N/A';
+                        const replyDate = letter.date_of_reply || '-';
+
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${letter.letter_number || '-'}</td>
+                            <td><strong>${letter.letter_number || '-'}</strong></td>
                             <td>${letter.subject || '-'}</td>
-                            <td>${letter.status || 'Waiting'}</td>
+                            <td><small>${districts}</small></td>
+                            <td><span class="status-badge ${statusClass}">${status || 'Waiting'}</span></td>
                             <td>${letter.deadline || '-'}</td>
+                            <td>${replyDate}</td>
                         `;
                         tbody.appendChild(row);
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" class="loading">No letters found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="loading">No letters found</td></tr>';
                 }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
+                const tbody = document.getElementById('recent-letters-body');
+                tbody.innerHTML = `<tr><td colspan="6" class="loading">Error loading data: ${error.message}</td></tr>`;
             }
         }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, initializing...');
             checkLoginStatus();
             loadDashboard();
         });
